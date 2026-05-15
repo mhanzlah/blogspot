@@ -2,7 +2,7 @@ import React from 'react'
 
 const App = () => {
     return (
-        <div>Under Development (Testing Vercel Deployment ###)</div>
+        <div className='font-serif'>Under Development</div>
     )
 }
 
