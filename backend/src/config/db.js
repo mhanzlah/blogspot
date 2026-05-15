@@ -1,9 +1,8 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
-function connectDB(uri, onSuccess, onError) {
-    mongoose.connect(uri)
-        .then(() => onSuccess())
-        .catch((err) => onError(err));
+async function connectDB(uri, cb) {
+    await mongoose.connect(uri);
+    cb();
 }
 
-module.exports = connectDB;
+export default connectDB;
