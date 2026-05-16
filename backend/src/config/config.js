@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const config = {
+    ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS.split(','),
     PORT: process.env.PORT || 3000,
     MONGO_URI: process.env.MONGO_URI,
     ACCESS_SECRET: process.env.ACCESS_SECRET,
@@ -11,6 +12,10 @@ const config = {
     REFRESH_EXPIRES_IN: process.env.REFRESH_EXPIRES_IN || '7d',
     BCRYPT_SALT: process.env.BCRYPT_SALT || 12,
 };
+
+if (!config.ALLOWED_ORIGINS) {
+    throw new Error('ALLOWED_ORIGINS is not defined in environment variables.');
+}
 
 if (!config.MONGO_URI) {
     throw new Error('MONGO_URI is not defined in environment variables.');
