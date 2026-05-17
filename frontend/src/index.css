@@ -1,12 +1,41 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: "Inter", sans-serif;
-  --font-serif: "Merriweather", serif;
+  --font-grotesk: "Host Grotesk", sans-serif;
+  --font-inter: "Inter", sans-serif;
 }
 
 @layer base {
   body {
-    font-family: var(--font-sans);
+    font-family: var(--font-inter);
   }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-grotesk);
+  }
+
+  button {
+    cursor: pointer;
+    font-family: var(--font-grotesk);
+  }
+}
+
+@layer components {
+  .nav-link {
+    @apply px-4 text-black hover:text-white bg-white hover:bg-black font-grotesk border border-transparent hover:border-black uppercase;
+  }
+
+  .form-btn {
+    @apply w-full border border-black bg-black hover:bg-white text-white hover:text-black h-12;
+  }
+}
+
+@utility flex-center {
+  @apply flex items-center justify-between;
 }
