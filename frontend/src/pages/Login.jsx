@@ -1,10 +1,9 @@
-import Header from '../components/Header'
-import Input from '../components/Input'
-
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
-import { useState } from 'react'
+import Header from '../components/Header'
+import Input from '../components/Input'
 
 const Login = () => {
 

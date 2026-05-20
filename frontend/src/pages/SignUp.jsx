@@ -1,9 +1,10 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+
+import { useAuth } from '../context/AuthContext'
 import Header from '../components/Header'
 import Input from '../components/Input'
 
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
-import { useAuth } from '../context/AuthContext'
 
 const SignUp = () => {
     const { register } = useAuth()

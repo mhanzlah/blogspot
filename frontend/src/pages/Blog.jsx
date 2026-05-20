@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import Markdown from 'react-markdown'
-
-import Header from '../components/Header'
-import Loader from '../components/Loader'
+import { Link, useParams } from 'react-router-dom'
 
 import { getBlog } from '../api/blog.api'
-
 import NotFound from './NotFound'
+import Header from '../components/Header'
+import Loader from '../components/Loader'
 
 const Blog = () => {
     const { slug } = useParams()

@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import Markdown from 'react-markdown'
 import { Link } from 'react-router-dom'
 
+import { getBlogs } from '../api/blog.api'
 import Header from '../components/Header'
 import Loader from '../components/Loader'
-
-import { getBlogs } from '../api/blog.api'
-import Markdown from 'react-markdown'
-
-import ReactPaginate from 'react-paginate'
 
 const BlogCard = ({ blog, featured = false }) => {
     return (
@@ -203,7 +200,6 @@ const Home = () => {
                     </section>
                 )}
 
-                {/* More Stories */}
                 {remainingBlogs.length > 0 && (
                     <section>
 
@@ -225,7 +221,6 @@ const Home = () => {
                     </section>
                 )}
 
-                {/* Pagination */}
                 {pagination && pagination.totalPages > 1 && (
                     <div className='flex justify-center mt-14 gap-3 flex-wrap'>
 

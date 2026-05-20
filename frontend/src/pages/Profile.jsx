@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import * as ReactPaginate from 'react-paginate'
 
-import Header from '../components/Header'
-import Loader from '../components/Loader'
-
-import { getMyBlogs, deleteBlog } from '../api/blog.api'
 import { useAuth } from '../context/AuthContext'
+import { getMyBlogs, deleteBlog } from '../api/blog.api'
+import Loader from '../components/Loader'
+import Header from '../components/Header'
 
 const Profile = () => {
 
@@ -47,7 +45,7 @@ const Profile = () => {
 
         try {
             await deleteBlog(slug)
-            fetchBlogs() // refresh
+            fetchBlogs()
         } catch (err) {
             console.error(err)
         }
@@ -73,7 +71,6 @@ const Profile = () => {
         <div>
             <Header content="Your Profile" />
 
-            {/* USER INFO */}
             {user && (
                 <div className="flex items-center gap-5 p-6 border-b">
                     <img
@@ -98,7 +95,6 @@ const Profile = () => {
                 </div>
             )}
 
-            {/* BLOG TABLE */}
             <div className="p-6">
                 <div className='flex-center'>
                     <h2 className="text-2xl font-bold mb-6">
@@ -180,23 +176,6 @@ const Profile = () => {
                         </table>
                     </div>
                 )}
-
-                {/* PAGINATION */}
-                {/* {pagination?.totalPages > 1 && (
-                    <ReactPaginate
-                        pageCount={pagination.totalPages}
-                        onPageChange={(e) => setPage(e.selected + 1)}
-                        forcePage={page - 1}
-                        previousLabel="Prev"
-                        nextLabel="Next"
-                        containerClassName="flex justify-center items-center gap-2 flex-wrap"
-                        pageClassName="w-10 h-10 flex items-center justify-center border rounded-full"
-                        activeClassName="bg-black text-white"
-                        previousClassName="px-4 h-10 flex items-center border rounded-full"
-                        nextClassName="px-4 h-10 flex items-center border rounded-full"
-                        disabledClassName="opacity-40"
-                    />
-                )} */}
             </div>
         </div>
     )

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
 import Markdown from 'react-markdown'
+import { useNavigate, useParams } from 'react-router-dom'
 
+import { getBlog, updateBlog, deleteBlog } from '../api/blog.api.js'
+import { useAuth } from '../context/AuthContext.jsx'
+import NotFound from './NotFound.jsx'
 import Header from '../components/Header.jsx'
 import Input from '../components/Input.jsx'
-import { useAuth } from '../context/AuthContext.jsx'
-import { getBlog, updateBlog, deleteBlog } from '../api/blog.api.js'
-import NotFound from './NotFound.jsx'
 import Loader from '../components/Loader.jsx'
 
 const EditBlog = () => {
@@ -25,7 +25,6 @@ const EditBlog = () => {
     const [blog, setBlog] = useState(null)
     const [loading, setLoading] = useState(true)
 
-    // 1. Load existing blog
     useEffect(() => {
         const fetchBlog = async () => {
             try {
@@ -37,7 +36,7 @@ const EditBlog = () => {
                     content: data.content,
                     status: data.status,
                     tags: data.tags?.join(', ') || '',
-                    coverImage: null // new file optional
+                    coverImage: null
                 })
             } catch (err) {
                 console.error(err)
