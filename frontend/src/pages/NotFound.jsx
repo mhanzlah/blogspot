@@ -13,7 +13,7 @@ const NotFound = () => {
                         We couldn't find the page you were looking for.
                     </p>
 
-                    <Link to='/blogs' className='border px-2 bg-black text-white hover:bg-white hover:text-black'>Explore blogs</Link>
+                    <Link to='/' className='border px-2 bg-black text-white hover:bg-white hover:text-black'>Explore blogs</Link>
                 </div>
             </div>
         </>

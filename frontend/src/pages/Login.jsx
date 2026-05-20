@@ -3,14 +3,37 @@ import Input from '../components/Input'
 
 import { Link } from 'react-router-dom'
 
-const Login = () => {
-    const handleSubmit = (e) => {
-        e.preventDefault()
+import { useAuth } from '../context/AuthContext'
+import { useState } from 'react'
 
+const Login = () => {
+
+    const { login, user, accessToken } = useAuth()
+
+    const [form, setForm] = useState({ username: '', password: '' })
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
+
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value })
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setError('')
+        setLoading(true)
+        try {
+            const token = await login(form.username, form.password)
+        } catch (error) {
+            setError(error.response?.data?.message || 'Login failed')
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
         <div>
+            {user && <div>{user.username}</div>}
             <Header content='Login to your Account' />
 
             <div className='px-5 mb-4 md:max-w-5xl md:container md:mx-auto'>
@@ -21,29 +44,36 @@ const Login = () => {
                 </div>
 
                 <form className='pt-4' onSubmit={handleSubmit}>
+
+                    {error && (
+                        <div className='mb-3'>
+                            <p className='text-red-500 text-sm'>{error}</p>
+                        </div>
+                    )}
+
                     <div className='mb-3'>
                         <label htmlFor="username" className='text-sm text-gray-400'>
                             Username or Email address
                         </label>
-                        <Input id='username' className='px-3 text-sm mt-1 border w-full h-12' />
+                        <Input id='username' className='px-3 text-sm mt-1 border w-full h-12' name='username' value={form.username} onChange={handleChange} />
                     </div>
 
                     <div className='mb-3'>
                         <label htmlFor="password" className='text-sm text-gray-400'>
                             Password
                         </label>
-                        <Input id='password' type='password' className='px-3 text-sm mt-1 border w-full h-12' />
+                        <Input id='password' type='password' className='px-3 text-sm mt-1 border w-full h-12' name='password' value={form.password} onChange={handleChange} />
                     </div>
 
                     <div className='mt-10'>
                         <button className='form-btn'>
-                            Login
+                            {loading ? 'Logging in' : 'Login'}
                         </button>
                     </div>
 
                     <div className='mt-6 text-sm text-center text-gray-400'>
                         <p>
-                            Don't have an account? {' '}
+                            No Account? {' '}
                             <Link to='/sign-up' className='text-black underline'>Sign Up</Link>
                         </p>
                     </div>

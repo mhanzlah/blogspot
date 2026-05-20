@@ -1,71 +1,71 @@
 import { Suspense, lazy } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, useNavigate } from 'react-router-dom'
 
-import MainLayout from './layouts/MainLayout'
+import Layout from './layouts/Layout'
 
 import Loader from './components/Loader'
+
+import GuestRoute from './components/GuestRoute'
+import ProtectedRoute from './components/ProtectedRoute'
+
+import { useAuth } from './context/AuthContext'
 
 const Home = lazy(() => import('./pages/Home'))
 const Login = lazy(() => import('./pages/Login'))
 const SignUp = lazy(() => import('./pages/SignUp'))
 const Profile = lazy(() => import('./pages/Profile'))
-const Blogs = lazy(() => import('./pages/Blogs'))
 const Blog = lazy(() => import('./pages/Blog'))
 const CreateBlog = lazy(() => import('./pages/CreateBlog'))
+const EditBlog = lazy(() => import('./pages/EditBlog'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 
 const router = createBrowserRouter([
     {
-        element: <MainLayout />,
+        element: <Layout />,
         children: [
             {
                 path: '/',
                 element: <Home />,
             },
             {
-                path: '/blogs',
-                children: [
-                    {
-                        index: true,
-                        element: <Blogs />,
-                        handle: {
-                            title: 'Blogs'
-                        },
-                    },
-                    {
-                        path: ':slug',
-                        element: <Blog />,
-                        handle: {
-                            title: ({ params }) => params.slug,
-                        },
-                    },
-                ],
+                path: '/blogs/:slug',
+                element: <Blog />,
+                handle: {
+                    title: ({ params }) => params.slug,
+                },
+            },
+            {
+                path: '/edit/:slug',
+                element: <EditBlog />,
+                handle: {
+                    title: ({ params }) => params.slug,
+                },
             },
             {
                 path: '/new',
-                element: <CreateBlog />,
+                element: <ProtectedRoute><CreateBlog /></ProtectedRoute>,
                 handle: {
                     title: 'Create a new blog',
                 },
             },
             {
                 path: '/login',
-                element: <Login />,
+                element: <GuestRoute> <Login /></GuestRoute>,
                 handle: {
                     title: 'Login',
                 },
             },
             {
                 path: '/sign-up',
-                element: <SignUp />,
+                element: <GuestRoute><SignUp /></GuestRoute>,
                 handle: {
                     title: 'Sign Up',
                 },
             },
             {
                 path: '/profile',
-                element: <Profile />,
+                element: <ProtectedRoute><Profile /></ProtectedRoute>,
                 handle: {
                     title: 'Profile',
                 },

@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
-const MainLayout = () => {
+const Layout = () => {
     const APP_NAME = import.meta.env.APP_NAME || 'Blogspot'
 
     const matches = useMatches()
@@ -35,4 +35,4 @@ const MainLayout = () => {
     )
 }
 
-export default MainLayout
+export default Layout
