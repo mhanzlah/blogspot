@@ -1,15 +1,14 @@
 import { Router } from 'express';
-import * as authController from '../controllers/auth.controller.js';
-import asyncHandler from '../middlewares/asyncHandler.js';
-import authMiddleware from '../middlewares/auth.middleware.js';
-import guestMiddleware from '../middlewares/guest.middleware.js';
+import { register, login, refresh, logout, me } from '../controllers/auth.controller.js';
+import { guestOnly } from '../middlewares/guestOnly.js';
+import { protect } from '../middlewares/protect.js';
 
 const authRouter = Router();
 
-authRouter.post('/register', guestMiddleware, asyncHandler(authController.register));
-authRouter.post('/login', guestMiddleware, asyncHandler(authController.login));
-authRouter.post('/logout', authMiddleware, asyncHandler(authController.logout));
-authRouter.get('/me', authMiddleware, asyncHandler(authController.me))
-authRouter.get('/refresh', authMiddleware, asyncHandler(authController.refresh))
+authRouter.post('/register', guestOnly, register);
+authRouter.post('/login', guestOnly, login);
+authRouter.post('/refresh', refresh)
+authRouter.post('/logout', protect, logout);
+authRouter.get('/me', protect, me)
 
 export default authRouter;

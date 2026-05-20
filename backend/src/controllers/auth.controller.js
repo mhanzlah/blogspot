@@ -1,153 +1,132 @@
 import jwt from "jsonwebtoken";
-import userModel from "../models/user.model.js";
-import ApiResponse from "../utils/ApiResponse.js";
-import config from '../config/config.js';
-import ApiError from "../utils/ApiError.js";
-import { createAccessToken, createRefreshToken, REFRESH_TOKEN_OPTIONS } from "../utils/tokens.js";
-import sessionModel from "../models/session.model.js";
-import bcrypt from 'bcrypt';
-import hash from "../utils/hash.js";
+import User from "../models/User.js";
+import { generateAccessToken, generateRefreshToken, REFRESH_TOKEN_OPTIONS, sendRefreshTokenCookie } from "../utils/tokens.js";
+import config from "../config/config.js";
 
-export async function register(req, res) {
-    const { username, email, password } = req.body;
-
-    const existedUser = await userModel.findOne({
-        $or: [
-            { username },
-            { email }
-        ]
-    })
-
-    if (existedUser) {
-        throw new ApiError(409, 'User with this username or email already exists');
-    }
-
-    const user = await userModel.create({ username, email, password });
-
-    const refreshToken = createRefreshToken({ userId: user._id });
-    const refreshTokenHash = hash(refreshToken);
-
-    const session = await sessionModel.create({
-        user: user._id, refreshTokenHash, ip: req.ip, userAgent: req.headers["user-agent"]
-    });
-
-    const accessToken = createAccessToken({ userId: user._id, sessionId: session._id });
-
-    res.cookie('refreshToken', refreshToken, REFRESH_TOKEN_OPTIONS);
-
-    return ApiResponse.success(res, {
-        accessToken,
-        user: {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-        }
-    }, 'User registered successfully', 201);
-}
-
-export async function login(req, res) {
-    const { usernameOrEmail, password } = req.body;
-
-    const user = await userModel.findOne({
-        $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }]
-    });
-
-    if (!user) {
-        throw new ApiError(401, "Invalid credentials");
-    }
-
-    const isValidPassword = await bcrypt.compare(password, user.password);
-
-    if (!isValidPassword) {
-        throw new ApiError(401, "Invalid credentials");
-    }
-
-    const refreshToken = createRefreshToken({ userId: user._id });
-    const refreshTokenHash = hash(refreshToken);
-
-    const session = await sessionModel.create({ user: user._id, refreshTokenHash, ip: req.ip, userAgent: req.headers['user-agent'] });
-
-    const accessToken = createAccessToken({ userId: user._id, sessionId: session._id });
-
-    res.cookie('refreshToken', refreshToken, REFRESH_TOKEN_OPTIONS);
-
-    return ApiResponse.success(res, {
-        accessToken,
-        user: {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-        }
-    }, "User logged in successfully");
-}
-
-export async function logout(req, res) {
-    const refreshToken = req.cookies.refreshToken;
-
-    if (refreshToken) {
-        const refreshTokenHash = hash(refreshToken);
-
-        const session = await sessionModel.findOne({
-            refreshTokenHash, isRevoked: false
-        });
-
-        if (session) {
-            session.isRevoked = true;
-            await session.save();
-        }
-        res.clearCookie('refreshToken', REFRESH_TOKEN_OPTIONS);
-    }
-
-    return ApiResponse.success(res, null, 'User logged out successfully');
-}
-
-export async function me(req, res) {
-    return ApiResponse.success(res, { user: req.user }, 'User fetched successfully')
-}
-
-export async function refresh(req, res) {
-    const refreshToken = req.cookies.refreshToken;
-
-    if (!refreshToken) {
-        throw new ApiError(401, 'Refresh token not found');
-    }
-
-    let decoded;
+export const register = async (req, res) => {
     try {
-        decoded = jwt.verify(refreshToken, config.JWT_SECRET);
+        const { username, email, password } = req.body;
+
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            return res.status(400).json({ message: "Username or email already taken" });
+        }
+
+        const user = await User.create({ username, email, password });
+
+        const accessToken = generateAccessToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
+
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        sendRefreshTokenCookie(res, refreshToken);
+
+        return res.status(201).json({
+            accessToken, user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                avatar: user.avatar,
+            }
+        });
     } catch (error) {
-        throw new ApiError(401, "Invalid refresh token");
+        return res.status(500).json({ message: error.message });
     }
+};
 
-    const refreshTokenHash = hash(refreshToken);
+export const login = async (req, res) => {
+    try {
+        const { username, password } = req.body;
 
-    const session = await sessionModel.findOne({ user: decode.userId, refreshTokenHash, isRevoked: false });
+        const user = await User.findOne({
+            $or: [
+                { username },
+                { email: username },
+            ]
+        });
+        if (!user) {
+            return res.status(401).json({ message: "Invalid credentials." });
+        }
 
-    if (!session) {
-        throw new ApiError(401, 'Invalid refresh token');
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        const accessToken = generateAccessToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
+
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        sendRefreshTokenCookie(res, refreshToken);
+
+        return res.json({
+            accessToken, user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                avatar: user.avatar,
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
     }
+};
 
-    session.isRevoked = true;
-    await session.save();
+export const refresh = async (req, res) => {
+    try {
+        const token = req.cookies.refreshToken;
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized - no token" });
+        }
 
-    const user = await userModel.findById(decoded.userId);
+        let decoded;
+        try {
+            decoded = jwt.verify(token, config.REFRESH_TOKEN_SECRET);
+        } catch (error) {
+            return res.status(403).json({ message: "Forbidden - Invalid refresh token" });
+        }
 
-    if (!user) {
-        throw new ApiError(404, "User not found");
+        const user = await User.findById(decoded.id);
+        if (!user || user.refreshToken !== token) {
+            return res.status(403).json({ message: "Forbidden - User not found" });
+        }
+
+        const newAccessToken = generateAccessToken(user._id);
+
+        return res.json({ accessToken: newAccessToken });
+
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
     }
+};
 
-    const newRefreshToken = createRefreshToken({ userId: user._id });
+export const logout = async (req, res) => {
+    try {
+        const token = req.cookies.refreshToken;
 
-    const newRefreshTokenHash = hash(newRefreshToken);
+        if (token) {
+            await User.findOneAndUpdate(
+                { refreshToken: token },
+                { refreshToken: null }
+            );
+        }
 
-    const newSession = await sessionModel.create({ user: user._id, refreshTokenHash: newRefreshTokenHash, ip: req.ip, userAgent: req.headers['user-agent'] });
+        res.clearCookie("refreshToken", REFRESH_TOKEN_OPTIONS);
 
-    const accessToken = createAccessToken({ userId: user._id, sessionId: newSession._id });
+        return res.json({ message: "Logged out successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
 
-    res.cookie('refreshToken', newRefreshToken, REFRESH_TOKEN_OPTIONS);
-
-    return ApiResponse.success(res, { accessToken }, 'Access token refreshed successfully');
-}
-
+export const me = async (req, res) => {
+    return res.json({
+        id: req.user._id,
+        username: req.user.username,
+        email: req.user.email,
+        avatar: req.user.avatar,
+    });
+};
