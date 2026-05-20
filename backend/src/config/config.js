@@ -14,7 +14,7 @@ const requiredVars = [
 
 requiredVars.forEach((key) => {
     if (!process.env[key])
-        throw new Error("Missing environment variable", key);
+        throw new Error(`Missing ${key} environment variable`);
 });
 
 const config = {
