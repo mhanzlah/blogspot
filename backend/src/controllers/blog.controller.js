@@ -51,10 +51,8 @@ export const createBlog = async (req, res) => {
 
 export const getAllBlogs = async (req, res) => {
     try {
-        const { pageString, limitString } = req.query;
-
-        const page = parseInt(pageString) || 1;
-        const limit = parseInt(limitString) || 9;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
 
         const skip = (page - 1) * limit;
 
@@ -71,18 +69,44 @@ export const getAllBlogs = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        res.json({
-            blogs, pagination: {
-                total: totalBlogs,
-                page,
-                limit,
-                totalPages,
-                hasNextPage: page < totalPages,
-                hasPreviousPage: page > 1,
-            }
+        return res.json({
+            blogs,
+            totalBlogs,
+            totalPages,
+            page,
+            limit,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
         });
+
     } catch (error) {
         return res.status(500).json({ message: error.message });
+    }
+};
+
+export const getBlogsByAuthor = async (req, res) => {
+    try {
+
+        const { slug } = req.query;
+
+        const blogs = await Blog.find({
+            status: "published",
+            author: req.params.authorId,
+            slug: { $ne: slug }
+        })
+            .populate("author", "username avatar")
+            .sort({ createdAt: -1 })
+            .select("-content")
+            .limit(3);
+
+        res.json(blogs);
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
     }
 }
 
@@ -107,10 +131,8 @@ export const getBlog = async (req, res) => {
 
 export const getMyBlogs = async (req, res) => {
     try {
-        const { pageString, limitString } = req.query;
-
-        const page = parseInt(pageString) || 1;
-        const limit = parseInt(limitString) || 9;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
 
         const skip = (page - 1) * limit;
 
@@ -128,19 +150,19 @@ export const getMyBlogs = async (req, res) => {
             .limit(limit);
 
         res.json({
-            blogs, pagination: {
-                total: totalBlogs,
-                page,
-                limit,
-                totalPages,
-                hasNextPage: page < totalPages,
-                hasPreviousPage: page > 1,
-            }
+            blogs,
+            total: totalBlogs,
+            page,
+            limit,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
         });
+
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
-}
+};
 
 export const updateBlog = async (req, res) => {
     try {

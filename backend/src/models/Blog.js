@@ -34,6 +34,10 @@ const blogSchema = new mongoose.Schema(
             default: "draft",
         },
         tags: [String],
+        featured: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,
