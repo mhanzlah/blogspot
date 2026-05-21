@@ -137,7 +137,7 @@ const Blog = () => {
                                         </span>
                                     </div>
 
-                                    {blog.author._id === user.id && (
+                                    {blog.author._id === user?.id && (
                                         <div className='flex justify-center'>
                                             <button className='border px-4 py-2 bg-white hover:bg-black text-black hover:text-white'>
                                                 <Link to={`/edit/${blog.slug}`}>Edit</Link>

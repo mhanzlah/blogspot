@@ -62,8 +62,8 @@ const Footer = () => {
     const footerData = {
         info: [{ label: "Profile", to: "/profile" }],
         company: [
-            { label: "About Us", to: "/about" },
-            { label: "How to best use", to: "/guide" },
+            { label: "About Us", to: "/blogs/about-blogspot" },
+            { label: "How to best use", to: "/blogs/guide-to-blogspot" },
         ],
         connect: [
             { label: "Email", to: "mailto:sayhi.hanzla@gmail.com.com" },

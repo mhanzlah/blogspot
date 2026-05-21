@@ -49,7 +49,7 @@ const Profile = () => {
 
         try {
             await deleteBlog(slug)
-
+            toast('Blog deleted successfully')
             fetchBlogs(page)
 
         } catch (err) {
