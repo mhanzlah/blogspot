@@ -64,9 +64,6 @@ export const AuthProvider = ({ children }) => {
 
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`
 
-        console.log(token, user);
-
-
         return token;
     }
 

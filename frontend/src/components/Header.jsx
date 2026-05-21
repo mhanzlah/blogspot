@@ -1,13 +1,11 @@
-import clsx from 'clsx'
+import Navbar from "./Navbar";
 
-const Header = ({ content, className }) => {
+const Header = () => {
     return (
-        <div className={clsx('py-8 md:py-6 px-3 border-b text-3xl md:text-5xl font-light text-center uppercase', className)}>
-            <header>
-                <h1>{content}</h1>
-            </header>
-        </div>
-    )
-}
+        <header className="h-14 sticky top-0 bg-white z-50 border-b">
+            <Navbar />
+        </header>
+    );
+};
 
-export default Header
+export default Header;

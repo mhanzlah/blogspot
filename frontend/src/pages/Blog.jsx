@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react'
-import Markdown from 'react-markdown'
-import { Link, useParams } from 'react-router-dom'
-
-import { getBlog } from '../api/blog.api'
-import NotFound from './NotFound'
-import Header from '../components/Header'
-import Loader from '../components/Loader'
+import { useEffect, useState } from 'react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Link, useParams } from 'react-router-dom';
+import { getBlog, getBlogsByAuthor } from '../api/blog.api';
+import NotFound from './NotFound';
+import PageTitle from '../components/PageTitle';
+import Loader from '../components/Loader';
+import { useAuth } from '../context/AuthContext';
 
 const Blog = () => {
-    const { slug } = useParams()
+    const { user } = useAuth();
+    const { slug } = useParams();
 
-    const [blog, setBlog] = useState(null)
-    const [loading, setLoading] = useState(true)
+    const [blog, setBlog] = useState(null);
+    const [moreBlogs, setMoreBlogs] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchBlog = async () => {
@@ -20,11 +23,13 @@ const Blog = () => {
 
                 setBlog(data)
 
+                const authorBlogs = await getBlogsByAuthor(data.author._id, slug);
+
+                setMoreBlogs(authorBlogs)
+
             } catch (error) {
                 console.error(error)
-
                 setBlog(null)
-
             } finally {
                 setLoading(false)
             }
@@ -39,93 +44,68 @@ const Blog = () => {
 
     return (
         <div>
-            <Header content={blog.title} />
+            <PageTitle content={blog.title} />
 
-            <div className='px-5 py-10 md:max-w-7xl md:mx-auto md:container'>
-                <div className='grid grid-cols-1 lg:grid-cols-4 gap-10'>
+            <div className='md:max-w-7xl md:mx-auto md:container md:border-l md:border-r'>
+                <div className='grid grid-cols-1 lg:grid-cols-4'>
 
-                    {/* Main Content */}
-                    <div className='lg:col-span-3'>
+                    <div className='lg:col-span-3 border-r'>
 
-                        {/* Cover Image */}
-                        <div className='overflow-hidden rounded-3xl border border-gray-200'>
+                        <div className='overflow-hidden border-b px-4 py-2'>
                             <img
                                 src={blog.coverImage}
                                 alt={blog.title}
-                                className='w-full max-h-[500px] object-cover'
+                                className='w-full max-h-125 object-cover'
                             />
                         </div>
 
-                        {/* Meta */}
-                        <div className='mt-6 flex flex-col gap-4 border-b border-gray-200 pb-6'>
+                        <article
+                            className='
+        px-8 py-6
+        prose prose-lg max-w-none
+        prose-headings:font-inter
+        prose-p:font-inter
+        prose-img:rounded-2xl
+        prose-pre:rounded-2xl
 
-                            {/* Author */}
-                            <div className='flex items-center gap-4'>
-                                <img
-                                    src={blog.author?.avatar}
-                                    alt={blog.author?.username}
-                                    className='w-14 h-14 rounded-full object-cover border'
-                                />
+        prose-table:block
+        prose-table:w-full
+        prose-table:overflow-x-auto
 
-                                <div>
-                                    <p className='font-semibold text-lg'>
-                                        {blog.author?.username}
-                                    </p>
+        prose-th:border
+        prose-th:px-3
+        prose-th:py-2
+        prose-th:bg-gray-100
 
-                                    <p className='text-sm text-gray-500'>
-                                        {new Date(blog.createdAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Tags */}
-                            {blog.tags?.length > 0 && (
-                                <div className='flex flex-wrap gap-2'>
-                                    {blog.tags.map((tag, index) => (
-                                        <span
-                                            key={index}
-                                            className='px-3 py-1 text-sm rounded-full bg-gray-100 border text-gray-700'
-                                        >
-                                            #{tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Content */}
-                        <article className='mt-8 prose prose-lg max-w-none prose-headings:font-inter prose-p:font-inter prose-img:rounded-2xl prose-pre:rounded-2xl'>
-                            <Markdown>
+        prose-td:border
+        prose-td:px-3
+        prose-td:py-2
+    '
+                        >
+                            <Markdown remarkPlugins={[remarkGfm]}>
                                 {blog.content}
                             </Markdown>
                         </article>
                     </div>
 
-                    {/* Sidebar */}
                     <aside className='lg:col-span-1'>
-                        <div className='sticky top-24 space-y-6'>
+                        <div className='sticky top-24 space-y-6 py-4'>
 
-                            {/* Author Card */}
-                            <div className='rounded-3xl border border-gray-200 p-5 shadow-sm'>
+                            <div className='border-t border-b p-5'>
                                 <div className='flex flex-col items-center text-center'>
                                     <img
                                         src={blog.author?.avatar}
                                         alt={blog.author?.username}
-                                        className='w-20 h-20 rounded-full object-cover border'
+                                        className='w-20 h-20 object-cover border'
                                     />
 
                                     <h3 className='mt-4 text-lg font-semibold'>
                                         {blog.author?.username}
                                     </h3>
-
-                                    <p className='mt-2 text-sm text-gray-500'>
-                                        Writer & Blogger
-                                    </p>
                                 </div>
                             </div>
 
-                            {/* Reading Info */}
-                            <div className='rounded-3xl border border-gray-200 p-5 shadow-sm'>
+                            <div className='border-t border-b p-5'>
                                 <h3 className='font-semibold mb-4'>
                                     Blog Info
                                 </h3>
@@ -157,11 +137,50 @@ const Blog = () => {
                                         </span>
                                     </div>
 
-                                    <div className='flex justify-center'>
-                                        <button className='border px-4 py-2'>
-                                            <Link to={`/edit/${blog.slug}`}>Edit</Link>
-                                        </button>
-                                    </div>
+                                    {blog.author._id === user.id && (
+                                        <div className='flex justify-center'>
+                                            <button className='border px-4 py-2 bg-white hover:bg-black text-black hover:text-white'>
+                                                <Link to={`/edit/${blog.slug}`}>Edit</Link>
+
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className='border-t border-b p-5'>
+                                <h3 className='font-semibold mb-4'>
+                                    More from author
+                                </h3>
+
+                                <div className='space-y-4'>
+                                    {moreBlogs.length === 0 ? (<p className='text-sm text-gray-500'>No more blogs yet.</p>) : moreBlogs.map((item) => (
+                                        <Link
+                                            key={item._id}
+                                            to={`/blogs/${item.slug}`}
+                                            className='block group'
+                                        >
+                                            <div className='flex gap-3'>
+
+                                                <img
+                                                    src={item.coverImage}
+                                                    alt={item.title}
+                                                    className='w-20 h-20 object-cover border'
+                                                />
+
+                                                <div className='flex-1 min-w-0'>
+                                                    <h4 className='text-sm font-medium line-clamp-2 group-hover:underline'>
+                                                        {item.title}
+                                                    </h4>
+
+                                                    <p className='text-xs text-gray-500 mt-1'>
+                                                        {new Date(item.createdAt).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+
+                                            </div>
+                                        </Link>
+                                    ))}
                                 </div>
                             </div>
 

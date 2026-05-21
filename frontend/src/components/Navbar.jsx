@@ -1,80 +1,87 @@
-import NavLink from '../components/Links/NavLink'
-import { useAuth } from '../context/AuthContext'
+import clsx from 'clsx';
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
+    const { user } = useAuth();
 
-    const { user } = useAuth()
+    let leftLinks = [
+        { name: "Home", to: "/" },
+        { name: "Create a blog", to: "/new" },
+    ];
+
+    let rightLinks = [
+        { name: "Profile", to: "/profile" },
+    ];
+
+    if (!user) {
+        leftLinks = [leftLinks[0]];
+        rightLinks = [
+            { name: "Login", to: "/login" },
+            { name: "Sign Up", to: "/sign-up" },
+        ];
+    }
+
+    const linkClass = ({ isActive }) =>
+        clsx(
+            "uppercase text-sm font-grotesk h-full flex items-center px-6",
+            isActive
+                ? "border-black text-black"
+                : "border-transparent text-black hover:bg-black hover:text-white"
+        );
 
     return (
-        <nav className='fixed top-0 z-50 md:px-2 w-full h-12 border-b flex items-center bg-white'>
-            <div className='md:hidden w-full h-full flex items-center justify-between'>
-                <div className='h-full flex-center'>
-                    <NavLink to='/' className='h-full flex-center text-sm tracking-wide'>Home</NavLink>
-                </div>
-                <div className='h-full flex-center'>
-                    <h1 className='text-xl font-bold tracking-wider h-full flex-center'>
-                        <NavLink to='/' className='h-full flex-center'>Blogspot</NavLink>
-                    </h1>
-                </div>
-                {user ? (
-                    <div className='h-full flex-center'>
-                        <NavLink to='/profile' className='h-full flex-center text-sm tracking-wide'>Profile</NavLink>
-                    </div>
-                ) : (
-                    <div className='h-full flex-center'>
-                        <NavLink to='/login' className='h-full flex-center text-sm tracking-wide'>Login</NavLink>
-                    </div>
-                )}
-            </div>
+        <nav className="w-full h-full md:px-2 flex items-stretch justify-between">
 
-            <div className='hidden md:flex w-full h-full items-center justify-between'>
-                <div className='h-full flex-center'>
-                    <ul className='h-full flex-center'>
-                        <li className='h-full flex-center'>
-                            <NavLink to='/' className='h-full flex-center text-sm tracking-wide'>
-                                Home
+            <ul className="h-full flex items-stretch">
+                {leftLinks
+                    .slice(0, 1)
+                    .map(({ name, to }) => (
+                        <li key={to} className="h-full">
+                            <NavLink to={to} className={({ isActive }) => clsx(linkClass({ isActive }), 'border-r md:border-l')}>
+                                {name}
                             </NavLink>
                         </li>
-                        <li className='h-full flex-center'>
-                            <NavLink to='/new' className='h-full flex-center text-sm tracking-wide'>
-                                Create a blog
+                    ))}
+
+                {leftLinks.slice(1).map(({ name, to }) => (
+                    <li key={to} className="h-full hidden md:block">
+                        <NavLink to={to} className={({ isActive }) => clsx(linkClass({ isActive }), 'border-l border-r')}>
+                            {name}
+                        </NavLink>
+                    </li>
+                ))}
+            </ul>
+
+            <h1 className="h-full flex items-stretch">
+                <NavLink
+                    to="/"
+                    className="h-full flex items-center px-4 font-bold text-xl tracking-wider text-black hover:bg-black hover:text-white"
+                >
+                    Blogspot
+                </NavLink>
+            </h1>
+
+            <ul className="h-full flex items-stretch">
+                {rightLinks
+                    .slice(0, 1)
+                    .map(({ name, to }) => (
+                        <li key={to} className="h-full">
+                            <NavLink to={to} className={({ isActive }) => clsx(linkClass({ isActive }), 'border-l md:border-r')}>
+                                {name}
                             </NavLink>
                         </li>
-                    </ul>
-                </div>
-                <div className='h-full flex-center'>
-                    <h1 className='text-xl font-bold tracking-wider h-full flex-center'>
-                        <NavLink to='/' className='h-full flex-center'>Blogspot</NavLink>
-                    </h1>
-                </div>
-                <div className='h-full flex-center'>
-                    <ul className='h-full flex-center'>
-                        {user ? (
-                            <>
-                                <li className='h-full flex-center'>
-                                    <NavLink to='/profile' className='h-full flex-center text-sm tracking-wide'>
-                                        Profile
-                                    </NavLink>
-                                </li>
-                            </>
-                        ) : (
-                            <>
-                                <li className='h-full flex-center'>
-                                    <NavLink to='/login' className='h-full flex-center text-sm tracking-wide'>
-                                        Login
-                                    </NavLink>
-                                </li>
-                                <li className='h-full flex-center'>
-                                    <NavLink to='/sign-up' className='h-full flex-center text-sm tracking-wide'>
-                                        Sign Up
-                                    </NavLink>
-                                </li>
-                            </>
-                        )}
-                    </ul>
-                </div>
-            </div>
-        </nav>
+                    ))}
+                {rightLinks.slice(1).map(({ name, to }) => (
+                    <li key={to} className="h-full hidden md:block">
+                        <NavLink to={to} className={({ isActive }) => clsx(linkClass({ isActive }), 'border-l border-r')}>
+                            {name}
+                        </NavLink>
+                    </li>
+                ))}
+            </ul>
+
+        </nav >
     )
 }
 

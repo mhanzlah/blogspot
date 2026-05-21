@@ -37,9 +37,9 @@ const router = createBrowserRouter([
             },
             {
                 path: '/edit/:slug',
-                element: <EditBlog />,
+                element: <ProtectedRoute><EditBlog /></ProtectedRoute>,
                 handle: {
-                    title: ({ params }) => `Edit ${params.slug}`,
+                    title: 'Edit blog',
                 },
             },
             {

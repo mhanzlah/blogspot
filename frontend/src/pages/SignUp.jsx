@@ -1,10 +1,9 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import PageTitle from '../components/PageTitle';
 
-import { useAuth } from '../context/AuthContext'
-import Header from '../components/Header'
-import Input from '../components/Input'
-
+import { toast } from '../utils/toast'
 
 const SignUp = () => {
     const { register } = useAuth()
@@ -16,7 +15,6 @@ const SignUp = () => {
         confirmPassword: ''
     })
 
-    const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
     const handleChange = (e) => {
@@ -25,10 +23,16 @@ const SignUp = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        setError('')
+
+        if (loading) return
+
+        if (!form.username || !form.email || !form.password || !form.confirmPassword) {
+            toast("All fields are required", false);
+            return;
+        }
 
         if (form.password !== form.confirmPassword) {
-            setError("Passwords do not match")
+            toast("Passwords do not match", false)
             return
         }
 
@@ -36,74 +40,84 @@ const SignUp = () => {
 
         try {
             await register(form.username, form.email, form.password)
+            toast("Account created successfully")
         } catch (err) {
-            setError(err.response?.data?.message || 'Signup failed')
+            toast(err.response?.data?.message || 'Signup failed', false)
         } finally {
             setLoading(false)
         }
     }
 
+    const isDisabled = loading
+
     return (
         <div>
-            <Header content='Sign Up for a new Account' />
+            <PageTitle content='Sign Up for a new Account' />
 
-            <div className='px-5 mb-4 md:max-w-5xl md:container md:mx-auto'>
-                <div className='py-12 text-center text-sm'>
+            <div className='px-5 mb-4 md:max-w-5xl md:container md:mx-auto py-8'>
+                <div className='py-4 text-center text-sm'>
                     <p>Sign up to start reading and sharing blogs.</p>
                 </div>
 
                 <form className='pt-4' onSubmit={handleSubmit}>
 
-                    {error && (
-                        <div className='mb-3'>
-                            <p className='text-red-500 text-sm'>{error}</p>
-                        </div>
-                    )}
-
                     <div className='mb-3'>
                         <label className='text-sm text-gray-400'>Username</label>
-                        <Input
+                        <input
                             name="username"
                             value={form.username}
                             onChange={handleChange}
+                            disabled={isDisabled}
                             className='px-3 text-sm mt-1 border w-full h-12'
                         />
                     </div>
 
                     <div className='mb-3'>
                         <label className='text-sm text-gray-400'>Email address</label>
-                        <Input
+                        <input
                             name="email"
                             value={form.email}
                             onChange={handleChange}
+                            disabled={isDisabled}
                             className='px-3 text-sm mt-1 border w-full h-12'
                         />
                     </div>
 
                     <div className='mb-3'>
                         <label className='text-sm text-gray-400'>Password</label>
-                        <Input
+                        <input
                             type='password'
                             name="password"
                             value={form.password}
                             onChange={handleChange}
+                            disabled={isDisabled}
                             className='px-3 text-sm mt-1 border w-full h-12'
                         />
                     </div>
 
                     <div className='mb-3'>
                         <label className='text-sm text-gray-400'>Confirm password</label>
-                        <Input
+                        <input
                             type='password'
                             name="confirmPassword"
                             value={form.confirmPassword}
                             onChange={handleChange}
+                            disabled={isDisabled}
                             className='px-3 text-sm mt-1 border w-full h-12'
                         />
                     </div>
 
                     <div className='mt-10'>
-                        <button className='form-btn'>
+                        <button
+                            type='submit'
+                            disabled={isDisabled}
+                            className={`form-btn flex items-center justify-center gap-2 transition-all ${isDisabled ? 'opacity-70 cursor-not-allowed' : ''
+                                }`}
+                        >
+                            {loading && (
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                            )}
+
                             {loading ? 'Creating account...' : 'Sign Up'}
                         </button>
                     </div>
@@ -116,6 +130,7 @@ const SignUp = () => {
                             </Link>
                         </p>
                     </div>
+
                 </form>
             </div>
         </div>

@@ -1,264 +1,251 @@
 import { useEffect, useState } from 'react'
-import Markdown from 'react-markdown'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { getBlogs } from '../api/blog.api'
-import Header from '../components/Header'
 import Loader from '../components/Loader'
+import Header from '../components/PageTitle'
 
-const BlogCard = ({ blog, featured = false }) => {
-    return (
-        <Link
-            to={`/blogs/${blog.slug}`}
-            className='group border border-gray-200 rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 bg-white'
-        >
-            <div className='overflow-hidden'>
-                <img
-                    src={blog.coverImage}
-                    alt={blog.title}
-                    className={`
-                        w-full object-cover transition-transform duration-500 group-hover:scale-105
-                        ${featured ? 'h-[350px]' : 'h-56'}
-                    `}
-                />
-            </div>
-
-            <div className='p-6'>
-
-                {/* Tags */}
-                {blog.tags?.length > 0 && (
-                    <div className='flex flex-wrap gap-2 mb-4'>
-                        {blog.tags.slice(0, 3).map((tag, index) => (
-                            <span
-                                key={index}
-                                className='text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600'
-                            >
-                                #{tag}
-                            </span>
-                        ))}
-                    </div>
-                )}
-
-                {/* Title */}
-                <h2
-                    className={`
-                        font-bold text-gray-900 group-hover:text-gray-600 transition-colors
-                        ${featured ? 'text-3xl' : 'text-xl'}
-                    `}
-                >
-                    {blog.title}
-                </h2>
-
-                {/* Excerpt */}
-                <div className='mt-3 text-gray-500 text-sm line-clamp-1 overflow-hidden'>
-                    <Markdown
-                        components={{
-                            p: ({ children }) => <span>{children}</span>,
-                            h1: ({ children }) => <span>{children}</span>,
-                            h2: ({ children }) => <span>{children}</span>,
-                            h3: ({ children }) => <span>{children}</span>,
-                            ul: ({ children }) => <span>{children}</span>,
-                            ol: ({ children }) => <span>{children}</span>,
-                            li: ({ children }) => <span>{children}</span>,
-                            blockquote: ({ children }) => <span>{children}</span>,
-                            pre: ({ children }) => <span>{children}</span>,
-                            code: ({ children }) => <span>{children}</span>,
-                        }}
-                    >
-                        {blog.excerpt}
-                    </Markdown>
-                </div>
-
-                {/* Footer */}
-                <div className='mt-6 flex items-center justify-between'>
-                    <div className='flex items-center gap-3'>
-                        <img
-                            src={blog.author?.avatar}
-                            alt={blog.author?.username}
-                            className='w-10 h-10 rounded-full object-cover'
-                        />
-
-                        <div>
-                            <p className='text-sm font-medium'>
-                                {blog.author?.username}
-                            </p>
-
-                            <p className='text-xs text-gray-500'>
-                                {new Date(blog.createdAt).toLocaleDateString()}
-                            </p>
-                        </div>
-                    </div>
-
-                    <span className='text-sm text-gray-500'>
-                        {blog.readTime || '2 min read'}
-                    </span>
-                </div>
-            </div>
-        </Link>
-    )
-}
+import Markdown from 'react-markdown'
 
 const Home = () => {
 
+    const navigate = useNavigate()
+
     const [blogs, setBlogs] = useState([])
+    const [featuredBlog, setFeaturedBlog] = useState(null)
+
     const [loading, setLoading] = useState(true)
+    const [fetching, setFetching] = useState(false)
 
     const [page, setPage] = useState(1)
-    const [pagination, setPagination] = useState(null)
+    const [totalPages, setTotalPages] = useState(1)
+
+    const fetchBlogs = async (pageNumber = 1) => {
+
+        try {
+
+            if (pageNumber === 1) {
+                setLoading(true)
+            } else {
+                setFetching(true)
+            }
+
+            const data = await getBlogs(pageNumber)
+
+            // SET FEATURED BLOG ONLY ONCE
+            let currentFeatured = featuredBlog
+
+            if (!featuredBlog) {
+                const foundFeatured = data.blogs.find(
+                    (blog) => blog.featured === true
+                )
+
+                if (foundFeatured) {
+                    setFeaturedBlog(foundFeatured)
+                    currentFeatured = foundFeatured
+                }
+            }
+
+            // REMOVE FEATURED BLOG FROM GRID
+            const filteredBlogs = data.blogs.filter(
+                (blog) => blog._id !== currentFeatured?._id
+            )
+
+            setBlogs(filteredBlogs)
+            setTotalPages(data.totalPages)
+
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoading(false)
+            setFetching(false)
+        }
+    }
 
     useEffect(() => {
-
-        const fetchBlogs = async () => {
-            try {
-
-                const data = await getBlogs(page)
-
-                console.log(data);
-
-
-                setBlogs(data.blogs)
-                setPagination(data.pagination)
-
-            } catch (error) {
-                console.error(error)
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchBlogs()
-
+        fetchBlogs(page)
     }, [page])
 
     if (loading) return <Loader />
 
-    const featuredBlog = blogs[0]
-    const topBlogs = blogs.slice(1, 7)
-    const remainingBlogs = blogs.slice(7)
-
-    if (!loading && blogs.length === 0) {
-        return (
-            <div>
-                <Header content="Latest Blogs" />
-
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <h2 className="text-2xl font-semibold text-gray-800">
-                        No blogs found
-                    </h2>
-                    <p className="text-gray-500 mt-2">
-                        Be the first one to create a blog 🚀
-                    </p>
-
-                    <Link
-                        to="/new"
-                        className="mt-5 px-6 py-2 rounded-full bg-black text-white"
-                    >
-                        Create Blog
-                    </Link>
-                </div>
-            </div>
-        )
-    }
-
     return (
         <div>
 
-            {/* Hero */}
-            <Header content='Latest Blogs' />
+            <Header content="Latest Blogs" />
 
-            <div className='px-5 py-10 md:max-w-7xl md:mx-auto md:container'>
+            <div className="md:max-w-7xl md:mx-auto md:container md:border-x">
 
-                {/* Featured */}
+                {/* FEATURED BLOG */}
                 {featuredBlog && (
-                    <section className='mb-16'>
-                        <BlogCard
-                            blog={featuredBlog}
-                            featured
-                        />
-                    </section>
-                )}
+                    <div
+                        onClick={() => navigate(`/blogs/${featuredBlog.slug}`)}
+                        className="cursor-pointer border-b p-6 hover:bg-gray-50 transition"
+                    >
 
-                {/* Trending */}
-                {topBlogs.length > 0 && (
-                    <section className='mb-16'>
+                        <div className="grid md:grid-cols-2 gap-6 items-center">
 
-                        <div className='flex items-center justify-between mb-8'>
-                            <h2 className='text-3xl font-bold'>
-                                Trending Articles
-                            </h2>
-                        </div>
+                            {/* IMAGE */}
+                            <div className="relative">
 
-                        <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8'>
-                            {topBlogs.map((blog) => (
-                                <BlogCard
-                                    key={blog._id}
-                                    blog={blog}
+                                <img
+                                    src={featuredBlog.coverImage}
+                                    alt={featuredBlog.title}
+                                    className="w-full h-72 object-cover border"
                                 />
-                            ))}
+
+                                <span className="font-grotesk absolute top-3 left-3 bg-black text-white text-xs px-3 py-1 tracking-wide">
+                                    FEATURED
+                                </span>
+
+                            </div>
+
+                            {/* CONTENT */}
+                            <div>
+
+                                <div className='flex items-center justify-between gap-4'>
+
+                                    <h1 className="text-3xl font-bold line-clamp-3">
+                                        {featuredBlog.title}
+                                    </h1>
+
+                                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                                        {featuredBlog?.author?.username}
+                                    </span>
+
+                                </div>
+
+                                <p className="text-sm text-gray-500 mt-3">
+                                    {new Date(featuredBlog.createdAt).toLocaleDateString()}
+                                </p>
+
+                                <div className="mt-5 text-gray-600 line-clamp-4">
+                                    <Markdown>
+                                        {featuredBlog.excerpt || 'Click to read full article...'}
+                                    </Markdown>
+                                </div>
+
+                            </div>
+
                         </div>
 
-                    </section>
+                    </div>
                 )}
 
-                {remainingBlogs.length > 0 && (
-                    <section>
+                {/* BLOG GRID */}
+                <div className="p-6 relative">
 
-                        <div className='flex items-center justify-between mb-8'>
-                            <h2 className='text-3xl font-bold'>
-                                More Stories
-                            </h2>
+                    {fetching && (
+                        <div className="sticky top-0 z-10 bg-white border-b px-4 py-2 text-sm text-gray-500 animate-pulse">
+                            Fetching blogs...
+                        </div>
+                    )}
+
+                    <div className={fetching ? "opacity-70 transition" : ""}>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border">
+
+                            {blogs.map((blog, index) => {
+
+                                const isLastCol = (index + 1) % 4 === 0
+                                const isLastRow =
+                                    index >= blogs.length - (blogs.length % 4 || 4)
+
+                                return (
+                                    <div
+                                        key={blog._id}
+                                        onClick={() => navigate(`/blogs/${blog.slug}`)}
+                                        className={`
+                                            cursor-pointer
+                                            bg-white
+                                            border-r
+                                            border-b
+                                            hover:bg-gray-50
+                                            transition
+                                            ${isLastCol ? 'border-r-0' : ''}
+                                            ${isLastRow ? 'border-b-0' : ''}
+                                        `}
+                                    >
+
+                                        <img
+                                            src={blog.coverImage}
+                                            alt={blog.title}
+                                            className="w-full h-40 object-cover"
+                                        />
+
+                                        <div className="p-4">
+
+                                            <h2 className="text-sm font-semibold line-clamp-2">
+                                                {blog.title}
+                                            </h2>
+
+                                            <p className="text-xs text-gray-500 mt-1">
+
+                                                {blog?.author?.username && (
+                                                    <span className="text-gray-700 font-medium">
+                                                        {blog.author.username} &sdot;{" "}
+                                                    </span>
+                                                )}
+
+                                                {new Date(blog.createdAt).toLocaleDateString()}
+
+                                            </p>
+
+                                            <div className="text-xs text-gray-600 mt-2 line-clamp-3 lg:line-clamp-2">
+                                                <Markdown>
+                                                    {blog.excerpt || "No preview available..."}
+                                                </Markdown>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                )
+                            })}
+
                         </div>
 
-                        <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8'>
-                            {remainingBlogs.map((blog) => (
-                                <BlogCard
-                                    key={blog._id}
-                                    blog={blog}
-                                />
-                            ))}
-                        </div>
+                    </div>
 
-                    </section>
-                )}
+                </div>
 
-                {pagination && pagination.totalPages > 1 && (
-                    <div className='flex justify-center mt-14 gap-3 flex-wrap'>
+                {/* PAGINATION */}
+                {blogs.length > 0 && (
+                    <div className="flex items-center justify-center gap-4 py-8">
 
                         <button
-                            disabled={!pagination.hasPrevPage}
-                            onClick={() => setPage((prev) => prev - 1)}
-                            className='px-5 h-11 rounded-full border disabled:opacity-50'
+                            disabled={page === 1}
+                            onClick={() => setPage((p) => p - 1)}
+                            className={`
+                px-5 py-2.5
+                border border-black
+                text-sm font-medium
+                transition-all duration-200
+                ${page === 1
+                                    ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                                    : 'bg-black text-white hover:bg-white hover:text-black'
+                                }
+            `}
                         >
                             Prev
                         </button>
 
-                        {Array.from({
-                            length: pagination.totalPages
-                        }).map((_, index) => {
-
-                            const pageNumber = index + 1
-
-                            return (
-                                <button
-                                    key={pageNumber}
-                                    onClick={() => setPage(pageNumber)}
-                                    className={`
-                                        w-11 h-11 rounded-full border transition
-                                        ${page === pageNumber
-                                            ? 'bg-black text-white'
-                                            : 'hover:bg-black hover:text-white'
-                                        }
-                                    `}
-                                >
-                                    {pageNumber}
-                                </button>
-                            )
-                        })}
+                        <div className="px-4 py-2 text-sm font-medium min-w-30 text-center">
+                            Page {page} of {totalPages}
+                        </div>
 
                         <button
-                            disabled={!pagination.hasNextPage}
-                            onClick={() => setPage((prev) => prev + 1)}
-                            className='px-5 h-11 rounded-full border disabled:opacity-50'
+                            disabled={page === totalPages}
+                            onClick={() => setPage((p) => p + 1)}
+                            className={`
+                px-5 py-2.5
+                border border-black
+                text-sm font-medium
+                transition-all duration-200
+                ${page === totalPages
+                                    ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                                    : 'bg-black text-white hover:bg-white hover:text-black'
+                                }
+            `}
                         >
                             Next
                         </button>
@@ -267,6 +254,7 @@ const Home = () => {
                 )}
 
             </div>
+
         </div>
     )
 }

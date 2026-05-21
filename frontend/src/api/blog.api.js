@@ -10,8 +10,13 @@ export const getBlogs = async (page = 1, limit = 10) => {
     return res.data
 }
 
-export const getMyBlogs = async (page = 1, limit = 5) => {
-    const res = await api.get(`/blogs/my?page=${page}&limit=${limit}`)
+export const getBlogsByAuthor = async (authorId, slug) => {
+    const res = await api.get(`/blogs/author/${authorId}?slug=${encodeURIComponent(slug)}`)
+    return res.data
+}
+
+export const getMyBlogs = async (page = 1) => {
+    const res = await api.get(`/blogs/my?page=${page}&limit=5`)
     return res.data
 }
 

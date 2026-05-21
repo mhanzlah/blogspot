@@ -7,8 +7,13 @@
 }
 
 @layer base {
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+
   body {
-    font-family: var(--font-inter);
+    @apply font-inter;
   }
 
   h1,
@@ -17,13 +22,38 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-grotesk);
+    @apply font-grotesk;
   }
 
   button {
-    cursor: pointer;
-    font-family: var(--font-grotesk);
+    @apply cursor-pointer font-grotesk;
   }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #000000;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #222222;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #000000 transparent;
 }
 
 @layer components {
