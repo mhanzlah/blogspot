@@ -155,15 +155,15 @@ const Home = () => {
                                         key={blog._id}
                                         onClick={() => navigate(`/blogs/${blog.slug}`)}
                                         className={`
-                                            cursor-pointer
-                                            bg-white
-                                            border-r
-                                            border-b
-                                            hover:bg-gray-50
-                                            transition
-                                            ${isLastCol ? 'border-r-0' : ''}
-                                            ${isLastRow ? 'border-b-0' : ''}
-                                        `}
+  cursor-pointer
+  bg-white
+  border-b md:border-r
+  hover:bg-gray-50
+  transition
+  ${isLastCol ? 'md:border-r-0' : ''}
+  ${isLastRow ? 'md:border-b-0' : ''}
+`}
+
                                     >
 
                                         <img

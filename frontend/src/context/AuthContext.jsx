@@ -21,9 +21,9 @@ export const AuthProvider = ({ children }) => {
 
                 const meRes = await api.get('/auth/me')
 
-                setUser(meRes.data);
+                setUser(meRes.data)
             } catch (error) {
-                console.error(error.response?.data?.message);
+                console.log("refresh failed:", error.response?.data || error.message)
 
                 setUser(null)
                 setAccessToken(null)
